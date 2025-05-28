@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visor Dental 3D</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    #logo {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 120px;
+      z-index: 10;
+    }
+    #sliderContainer {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+    #progressionSlider {
+      width: 300px;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <img id="logo" src="logo.png" alt="Logo Clínica">
+  <div id="sliderContainer">
+    <input type="range" id="progressionSlider" min="0" max="3" step="1" value="0">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/STLLoader.js"></script>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    camera.position.z = 70;
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(0, 0, 100).normalize();
+    scene.add(light);
+
+    const loader = new THREE.STLLoader();
+    const models = [];
+    const filenames = [
+      'fase1.stl',
+      '48589_DIRECT_Subsetup2_Maxillary.stl',
+      '48589_DIRECT_Subsetup3_Maxillary.stl',
+      '48589_DIRECT_Subsetup4_Maxillary.stl'
+    ];
+
+    filenames.forEach((filename, index) => {
+      loader.load(filename, geometry => {
+        const material = new THREE.MeshPhongMaterial({ color: 0xaaaaaa, specular: 0x111111, shininess: 200 });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.visible = index === 0;
+        scene.add(mesh);
+        models[index] = mesh;
+      });
+    });
+
+    document.getElementById("progressionSlider").addEventListener("input", e => {
+      const index = parseInt(e.target.value);
+      models.forEach((m, i) => { if (m) m.visible = i === index });
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
